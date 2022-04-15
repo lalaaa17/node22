@@ -1,13 +1,16 @@
-import {Body, Controller, Delete, Get, Param, Post, Put} from '@nestjs/common';
+import {Body, Controller, Delete, Get, Param, Post, Put, Req} from '@nestjs/common';
 import {UserService} from "./user.service";
 import {User} from "./user.entity";
+import {JwtService} from "@nestjs/jwt";
+import {Request} from 'express';
 
 // @ts-ignore
 // @ts-ignore
 @Controller('users')
 export class UserController {
 
-    constructor(private userService: UserService) {
+    constructor(private userService: UserService,
+                private jwtService: JwtService) {
     }
 
    @Get('users')
@@ -15,6 +18,14 @@ export class UserController {
         return this.userService.all();
     }
 
+    @Get('profile')
+    async profile(@Req() request: Request) {
+        const token = request.cookies['jwt'];
+
+        const data = await this.jwtService.verifyAsync(token);
+
+        return this.userService.findOne({id: data.id});
+    }
     @Post('user')
     create (@Body() data): Promise<User> {
         return this.userService.create(data);
